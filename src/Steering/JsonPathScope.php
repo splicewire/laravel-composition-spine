@@ -8,27 +8,35 @@ use JsonPath\JsonObject;
  * The one place the JSONPath engine is named. Everything else in {@see \Splicewire\Composition\Steering}
  * asks this class "does this scope cover this node?" and never sees a vendor type, mirroring the way
  * `JsonPathMutator` isolates the same library for DataOverlay (ADR-0089) so the engine stays swappable.
- *
- * `galbar/jsonpath` is reached transitively through `schemastud/laravel-data-schemas`, deliberately:
- * the steering tier was specified to add ZERO new dependencies, and this indirection is the reason a
- * later swap costs one file rather than a package-wide rewrite.
- *
- * A malformed scope raises rather than silently matching nothing. Silently dropping an unparseable
- * scope would re-create the fault scoping exists to prevent — a cue reaching a section it was never
- * meant for, or vanishing from one it was — with no signal that anything went wrong.
  */
 final class JsonPathScope
 {
     /**
-     * Does `$scope` cover the node at `$nodePath` within `$document`?
+     * Field written onto the nodes under test so they can be recognised in the scope's results. Nothing
+     * outside this method sees it: it is added to a private copy of the document, and the copy is
+     * discarded when the call returns.
+     */
+    private const PROBE = '__splicewire_steering_probe';
+
+    /**
+     * Does `$scope` cover the node(s) at `$nodePath` within `$document`?
      *
-     * Matching is by VALUE: the scope is evaluated to its set of matched nodes and the node under test
-     * is checked for membership. The engine returns matched values, not their paths, so value equality
-     * is the available comparison — and it is the honest one, since two byte-identical sections are
-     * indistinguishable to anything downstream that reads them.
+     * The engine reports matched VALUES, not their paths, so asking "is this node in the scope's result
+     * set" by comparing values would answer wrongly for the ordinary case of a song with two identical
+     * verses — every byte-identical node would stand in for every other. Instead the nodes under test are
+     * MARKED in a throwaway copy of the document and the scope is then evaluated against it, so
+     * membership is decided by position rather than by content.
      *
-     * With `$nodePath` null the question degrades to "does this scope match anything at all here?" —
-     * the document-level read, which is what a caller with no particular node in hand is asking.
+     * `$nodePath` may select more than one node — "the sections tagged VERSE", when a song has two. The
+     * answer is then all-or-nothing: the scope must cover EVERY one of them. A contribution that is right
+     * for the first verse and wrong for the second is not right for "VERSE", and letting it through on
+     * the strength of the first is how a cue reaches a section it was never meant for.
+     *
+     * With `$nodePath` null the question degrades to "does this scope match anything at all here?" — the
+     * document-level read, which is what a caller with no particular node in hand is asking.
+     *
+     * A malformed scope raises rather than silently matching nothing. Swallowing it would re-create the
+     * fault scoping exists to prevent, with no signal that anything had gone wrong.
      *
      * @param  array<mixed>  $document  the target document the scope is absolute against
      */
@@ -36,29 +44,23 @@ final class JsonPathScope
     {
         $object = new JsonObject($document);
 
-        $matched = $this->matches($object, $scope);
-
-        if ($matched === []) {
-            return false;
-        }
-
         if ($nodePath === null) {
-            return true;
+            return $this->matches($object, $scope) !== [];
         }
 
-        $node = $this->matches($object, $nodePath);
+        // Mutates this call's own copy: JsonObject holds the array by value, so the caller's document is
+        // untouched and no probe field can leak into a payload, a hash, or a render.
+        $object->add($nodePath, true, self::PROBE);
 
-        if ($node === []) {
+        $targets = $this->countProbed($this->matches($object, $nodePath));
+
+        // Zero targets means the path named nothing — or named something a field cannot be added to,
+        // such as a scalar. Either way there is no node here for the scope to cover.
+        if ($targets === 0) {
             return false;
         }
 
-        foreach ($node as $value) {
-            if (! $this->contains($matched, $value)) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->countProbed($this->matches($object, $scope)) === $targets;
     }
 
     /**
@@ -68,22 +70,24 @@ final class JsonPathScope
     {
         $result = $object->get($path);
 
-        // The engine reports "no match" as false in some configurations and [] in others; both mean
-        // the same thing here.
+        // The engine reports "no match" as false in some configurations and [] in others; both mean the
+        // same thing here.
         return is_array($result) ? $result : [];
     }
 
     /**
-     * @param  array<int, mixed>  $haystack
+     * @param  array<int, mixed>  $nodes
      */
-    private function contains(array $haystack, mixed $needle): bool
+    private function countProbed(array $nodes): int
     {
-        foreach ($haystack as $candidate) {
-            if ($candidate === $needle) {
-                return true;
+        $count = 0;
+
+        foreach ($nodes as $node) {
+            if (is_array($node) && ($node[self::PROBE] ?? false) === true) {
+                $count++;
             }
         }
 
-        return false;
+        return $count;
     }
 }

@@ -65,8 +65,9 @@ final class ResolvedSteering
      * lyric-less instrumental section, and "we could not check, so we let it through" is that bug.
      *
      * @param  array<mixed>|null  $document  the target document scopes are absolute against
-     * @param  string|null  $nodePath  JSONPath of the node being read; null asks the document-level
-     *                                 question, "does this scope match anything here at all?"
+     * @param  string|null  $nodePath  JSONPath of the node being read. May select several nodes, in
+     *                                 which case a scope must cover ALL of them; null asks the
+     *                                 document-level question, "does this scope match anything here?"
      * @return array<int, SteeringContribution>
      */
     public function effective(?array $document = null, ?string $nodePath = null, ?int $cap = null): array
@@ -80,15 +81,15 @@ final class ResolvedSteering
                 }
             }
 
-            $applicable[] = [$index, $contribution];
+            $applicable[] = ['declaredAt' => $index, 'contribution' => $contribution];
         }
 
-        usort(
-            $applicable,
-            fn (array $a, array $b) => [$b[1]->priority, $a[0]] <=> [$a[1]->priority, $b[0]],
-        );
+        // Priority descending, declaration order breaking ties — so a cap cuts the low-priority tail and
+        // an untied read comes back in the order it was declared in.
+        usort($applicable, fn (array $a, array $b) => [$b['contribution']->priority, $a['declaredAt']]
+            <=> [$a['contribution']->priority, $b['declaredAt']]);
 
-        $ordered = array_map(fn (array $pair) => $pair[1], $applicable);
+        $ordered = array_column($applicable, 'contribution');
 
         return $cap === null ? $ordered : array_slice($ordered, 0, $cap);
     }

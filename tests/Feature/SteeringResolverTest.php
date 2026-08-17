@@ -96,6 +96,37 @@ it('drops a scoped contribution when there is no document to evaluate it against
     expect(keysOf($resolved->effective()))->toBe(['dry']);
 });
 
+it('tells two byte-identical nodes apart when deciding scope', function () {
+    $resolved = (new SteeringResolver)->resolve([
+        contribution('diction', 'first-verse-only', scope: '$.sections[0]'),
+    ]);
+
+    $document = ['sections' => [
+        ['tag' => 'VERSE', 'lyrics' => 'the words'],
+        ['tag' => 'VERSE', 'lyrics' => 'the words'],
+    ]];
+
+    // Comparing matched VALUES would make every identical verse stand in for every other, and a scope
+    // drawn around the first would silently apply to the second.
+    expect(keysOf($resolved->effective($document, '$.sections[0]')))->toBe(['first-verse-only'])
+        ->and(keysOf($resolved->effective($document, '$.sections[1]')))->toBe([]);
+});
+
+it('requires a scope to cover every node when the read names more than one', function () {
+    $resolved = (new SteeringResolver)->resolve([
+        contribution('diction', 'drawn-out', scope: '$..sections[?(@.lyrics)]'),
+    ]);
+
+    $document = ['sections' => [
+        ['tag' => 'VERSE', 'lyrics' => 'the words'],
+        ['tag' => 'VERSE'],
+    ]];
+
+    // "Right for the first verse, wrong for the second" is not right for VERSE. Letting it through on
+    // the strength of the first is how a cue reaches a section it was never meant for.
+    expect(keysOf($resolved->effective($document, '$.sections[?(@.tag == "VERSE")]')))->toBe([]);
+});
+
 it('answers the document-level question when no node is named', function () {
     $resolved = (new SteeringResolver)->resolve([
         contribution('diction', 'drawn-out', scope: '$..sections[?(@.lyrics)]'),
