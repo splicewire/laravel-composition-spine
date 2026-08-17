@@ -6,44 +6,41 @@ use Splicewire\Composition\Contracts\AngleContract;
 use Splicewire\Composition\Contracts\AngleContributor;
 
 /**
- * Merges an ordered set of angles into one {@see ComposedShape}. The caller's ordered picks are honoured
- * in order; angles without a registered contributor are skipped, and an empty result falls back to a
- * neutral base contributor resolved from the `composition-engine.fallback_angle` config. Registering a
- * new contributor is all a future angle needs — the merge and every downstream consumer are
- * angle-agnostic.
+ * Merges an ordered set of angles into one {@see ComposedShape}. MANY angles, not one: the caller's
+ * ordered picks are all merged — sections, grounding emphasis and encouraged components union across
+ * them, while the FIRST requested angle supplies the composed intent and title guidance. Angles with no
+ * registered contributor are skipped. Registering a new contributor is all a future angle needs; the
+ * merge and every downstream consumer are angle-agnostic.
+ *
+ * The neutral base is the ZERO-angle case, not the one-angle case: the shape a piece carries when no
+ * editorial angle applies, either because none was requested or because none matched.
  *
  * The composer is vocabulary-agnostic: it keys contributors by their {@see AngleContract::value()}
- * string and never names a concrete angle. It knows *that* there is a neutral fallback, never *which*.
+ * string and never names a concrete angle. It knows *that* there is a neutral base, never *which*.
  *
- * The fallback is resolved LAZILY — only when a requested key matches nothing registered, or when
- * nothing matched at all. Constructing a composer therefore needs no host config: a caller that always
- * passes real angles never touches it. It used to resolve in the constructor and THROW when unset,
- * which made an open package unusable without configuration it does not ship. A host that never needs
- * the neutral path may now leave it unset entirely, in which case an unmatched compose yields an empty
- * shape flagged `neutralBase` rather than an exception.
+ * This class reads NO config and touches NO container. It used to do both — resolving
+ * `composition-engine.angle_contributors` and `composition-engine.fallback_angle` through `app()` in
+ * its own constructor, and throwing when the latter was unset. Two things were wrong with that: an
+ * open package cannot require configuration it does not ship in order to be constructible, and that
+ * namespace never existed anyway (the engine merges its file as `splicewire.composition`), so both
+ * reads silently returned nothing. Wiring is now the service provider's job; see
+ * {@see \Splicewire\Composition\CompositionDataServiceProvider} and `config/composition-angles.php`.
+ *
+ * The neutral base is OPTIONAL. Absent one, a compose that matches nothing returns an empty shape
+ * flagged `neutralBase` rather than raising — the flag is what consumers branch on.
  */
 class AngleComposer
 {
     /** @var array<string, AngleContributor> */
     private array $registry = [];
 
-    private ?AngleContributor $fallback = null;
-
-    private bool $fallbackResolved = false;
-
     /**
-     * @param  iterable<AngleContributor>|null  $contributors  when null, resolved from
-     *                                                         composition-engine.angle_contributors config
+     * @param  iterable<AngleContributor>  $contributors  the registered angle vocabulary
+     * @param  AngleContributor|null  $neutralBase  the shape used when no angle applies; null is a
+     *                                              supported state, not a misconfiguration
      */
-    public function __construct(?iterable $contributors = null)
+    public function __construct(iterable $contributors = [], private ?AngleContributor $neutralBase = null)
     {
-        if ($contributors === null) {
-            $contributors = array_map(
-                fn (string $class): AngleContributor => app($class),
-                config('composition-engine.angle_contributors', []),
-            );
-        }
-
         foreach ($contributors as $contributor) {
             $this->registry[$contributor->angle()->value()] = $contributor;
         }
@@ -68,8 +65,8 @@ class AngleComposer
             // have been a silent content change that the neutrality tests could not see.
             $contributor = $this->registry[$key] ?? null;
 
-            if ($contributor === null && $this->fallback()?->angle()->value() === $key) {
-                $contributor = $this->fallback();
+            if ($contributor === null && $this->neutralBase?->angle()->value() === $key) {
+                $contributor = $this->neutralBase;
             }
 
             if ($contributor !== null) {
@@ -78,9 +75,7 @@ class AngleComposer
         }
 
         if ($contributors === []) {
-            $fallback = $this->fallback();
-
-            if ($fallback === null) {
+            if ($this->neutralBase === null) {
                 // No neutral base configured: an honestly empty shape, flagged neutral. Consumers read
                 // the flag first (see ShapeBeatGuidance), so they short-circuit before the emptiness.
                 return new ComposedShape(
@@ -94,7 +89,7 @@ class AngleComposer
                 );
             }
 
-            $contributors[$fallback->angle()->value()] = $fallback;
+            $contributors[$this->neutralBase->angle()->value()] = $this->neutralBase;
         }
 
         // The shape is neutral when it resolved to the neutral fallback contributor ALONE — whether
@@ -102,33 +97,12 @@ class AngleComposer
         // angle explicitly. Either way the piece carries no real editorial angle. Recorded here because
         // the fallback contributor is not empty (it carries sections and a prompt fragment), so
         // neutrality cannot be derived downstream from emptiness — it must be stamped at composition time.
-        // Compared by CLASS, read straight from config, so the flag never forces a resolve it did not
-        // already need — and so it still holds when the fallback is ALSO listed in angle_contributors
-        // and therefore matched through the registry rather than the fallback path.
-        $fallbackClass = config('composition-engine.fallback_angle');
-
-        $neutralBase = count($contributors) === 1
-            && is_string($fallbackClass)
-            && $fallbackClass !== ''
-            && reset($contributors) instanceof $fallbackClass;
+        // Keyed off the INJECTED neutral base, so the flag holds whether it was reached through the
+        // registry (a host that also lists it among contributors) or through the neutral path.
+        $neutralBase = $this->neutralBase !== null
+            && array_keys($contributors) === [$this->neutralBase->angle()->value()];
 
         return $this->merge(array_values($contributors), $neutralBase);
-    }
-
-    /**
-     * The neutral base contributor, or null when the host configures none. Resolved at most once, and
-     * only when a compose actually reaches for it.
-     */
-    private function fallback(): ?AngleContributor
-    {
-        if (! $this->fallbackResolved) {
-            $this->fallbackResolved = true;
-
-            $class = config('composition-engine.fallback_angle');
-            $this->fallback = is_string($class) && $class !== '' ? app($class) : null;
-        }
-
-        return $this->fallback;
     }
 
     /**

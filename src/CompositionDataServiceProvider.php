@@ -21,6 +21,30 @@ class CompositionDataServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/composition-spine-data.php', 'composition-spine-data');
 
+        // Angles are namespaced under the PRODUCT root, beside the engine's own
+        // `splicewire.composition.*`, rather than under a package-shaped key. The two packages merge
+        // disjoint sub-keys, so boot order does not matter. Declared here because this package owns
+        // AngleComposer, ComposedShape and the AngleContributor port — the engine used to declare
+        // config the spine read, which is the same inversion that had the port itself filed upward.
+        $this->mergeConfigFrom(__DIR__.'/../config/composition-angles.php', 'splicewire.composition.angles');
+
+        // The composer takes its vocabulary by injection and reads no config itself, so it stays a
+        // plain object a test or a host can construct directly. Both keys are optional: a host with no
+        // angles gets a composer that always yields the empty neutral shape, and nothing throws.
+        $this->app->bind(Angles\AngleComposer::class, function (): Angles\AngleComposer {
+            $neutralBase = config('splicewire.composition.angles.neutral_base');
+
+            return new Angles\AngleComposer(
+                contributors: array_map(
+                    fn (string $class): Contracts\AngleContributor => $this->app->make($class),
+                    (array) config('splicewire.composition.angles.contributors', []),
+                ),
+                neutralBase: is_string($neutralBase) && $neutralBase !== ''
+                    ? $this->app->make($neutralBase)
+                    : null,
+            );
+        });
+
         // The single keyword chokepoint, prefix driven by config. Bound as a singleton so every emit and
         // read site (across this package and the engine) resolves the same prefix.
         $this->app->singleton(KeywordVocabulary::class, fn () => new KeywordVocabulary(

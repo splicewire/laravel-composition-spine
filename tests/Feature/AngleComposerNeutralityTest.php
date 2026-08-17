@@ -14,8 +14,8 @@ use Splicewire\Composition\Tests\Stubs\StubAngle;
 
 beforeEach(function () {
     config([
-        'composition-engine.fallback_angle' => NeutralAngle::class,
-        'composition-engine.angle_contributors' => [FeatureAngle::class],
+        'splicewire.composition.angles.neutral_base' => NeutralAngle::class,
+        'splicewire.composition.angles.contributors' => [FeatureAngle::class],
     ]);
 });
 
@@ -74,7 +74,7 @@ it('keeps the fallback contributor non-empty, so neutrality is not inferable fro
  * was unset, so a caller passing only real angles still could not build a composer.
  */
 it('composes real angles with no fallback configured at all', function () {
-    config(['composition-engine.fallback_angle' => null]);
+    config(['splicewire.composition.angles.neutral_base' => null]);
 
     $shape = app(AngleComposer::class)->compose(['feature']);
 
@@ -84,7 +84,7 @@ it('composes real angles with no fallback configured at all', function () {
 });
 
 it('yields an empty shape flagged neutral when nothing matches and no fallback is configured', function () {
-    config(['composition-engine.fallback_angle' => null]);
+    config(['splicewire.composition.angles.neutral_base' => null]);
 
     $shape = app(AngleComposer::class)->compose(['totally-made-up']);
 
