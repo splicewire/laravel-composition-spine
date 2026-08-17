@@ -3,8 +3,8 @@
 namespace Splicewire\Composition\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
-use Splicewire\Composition\CompositionDataServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
+use Splicewire\Composition\CompositionDataServiceProvider;
 
 abstract class TestCase extends Orchestra
 {

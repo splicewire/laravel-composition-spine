@@ -38,9 +38,14 @@ class ComposedShape
         public bool $neutralBase = false,
     ) {}
 
-    public function primaryAngle(): AngleContract
+    /**
+     * The primary (first) angle, or null for the empty neutral shape a host with no configured neutral
+     * base produces. Nullable rather than throwing: `neutralBase` is the flag consumers branch on, and a
+     * shape that reports itself neutral should not then explode when asked what it is.
+     */
+    public function primaryAngle(): ?AngleContract
     {
-        return $this->angles[0];
+        return $this->angles[0] ?? null;
     }
 
     public function hasAngle(AngleContract $angle): bool

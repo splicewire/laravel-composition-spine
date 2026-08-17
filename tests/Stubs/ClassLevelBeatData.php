@@ -2,17 +2,17 @@
 
 namespace Splicewire\Composition\Tests\Stubs;
 
+use Spatie\LaravelData\Data;
 use Splicewire\Composition\Attributes\Beat;
 use Splicewire\Composition\Attributes\BeatKind;
 use Splicewire\Composition\Attributes\Cache;
 use Splicewire\Composition\Attributes\Generate;
-use Splicewire\Grounding\Attributes\Ground;
 use Splicewire\Composition\Attributes\MaxDepth;
 use Splicewire\Composition\Attributes\Pause;
 use Splicewire\Composition\Attributes\Polish;
 use Splicewire\Composition\Attributes\Prose;
 use Splicewire\Composition\Attributes\ProseRole;
-use Spatie\LaravelData\Data;
+use Splicewire\Grounding\Attributes\Ground;
 
 /**
  * A leaf declaring the trailing generation attributes at CLASS level — the ones BeatGrammar

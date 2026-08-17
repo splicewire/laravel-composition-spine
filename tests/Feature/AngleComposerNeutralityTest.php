@@ -67,3 +67,45 @@ it('keeps the fallback contributor non-empty, so neutrality is not inferable fro
         ->and($shape->sections)->not->toBeEmpty()
         ->and($shape->promptFragment)->not->toBe('');
 });
+
+/**
+ * The fallback is OPTIONAL and LAZY. An open package must be constructible and usable without host
+ * config it does not ship; previously the constructor resolved the fallback eagerly and threw when it
+ * was unset, so a caller passing only real angles still could not build a composer.
+ */
+it('composes real angles with no fallback configured at all', function () {
+    config(['composition-engine.fallback_angle' => null]);
+
+    $shape = app(AngleComposer::class)->compose(['feature']);
+
+    expect($shape->neutralBase)->toBeFalse()
+        ->and($shape->primaryAngle())->toBe(StubAngle::Feature)
+        ->and($shape->sections)->not->toBeEmpty();
+});
+
+it('yields an empty shape flagged neutral when nothing matches and no fallback is configured', function () {
+    config(['composition-engine.fallback_angle' => null]);
+
+    $shape = app(AngleComposer::class)->compose(['totally-made-up']);
+
+    expect($shape->neutralBase)->toBeTrue()
+        ->and($shape->angles)->toBe([])
+        ->and($shape->primaryAngle())->toBeNull()
+        ->and($shape->sections)->toBe([])
+        ->and($shape->promptFragment)->toBe('');
+});
+
+/**
+ * The regression this refactor could most easily have introduced: the fallback is no longer
+ * pre-registered, so it must stay addressable BY KEY or layering it onto a real angle would silently
+ * stop merging its sections and fragment — a content change no neutrality assertion would catch.
+ */
+it('still layers the explicitly-requested fallback content onto a real angle', function () {
+    $layered = app(AngleComposer::class)->compose(['feature', 'neutral']);
+    $featureOnly = app(AngleComposer::class)->compose(['feature']);
+
+    expect($layered->neutralBase)->toBeFalse()
+        ->and($layered->primaryAngle())->toBe(StubAngle::Feature)
+        ->and(count($layered->sections))->toBeGreaterThan(count($featureOnly->sections))
+        ->and($layered->promptFragment)->not->toBe($featureOnly->promptFragment);
+});

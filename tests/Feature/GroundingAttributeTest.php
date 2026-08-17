@@ -2,9 +2,9 @@
 
 use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
 use Spatie\LaravelData\Data;
-use Splicewire\Grounding\Attributes\Grounding;
 use Splicewire\Composition\GenerationAttributesStrategy;
 use Splicewire\Composition\KeywordVocabulary;
+use Splicewire\Grounding\Attributes\Grounding;
 
 /**
  * Grounding-fusion issue 03 — the `Grounding` attribute projects declared grounding SOURCES to the
