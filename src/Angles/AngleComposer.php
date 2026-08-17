@@ -4,6 +4,8 @@ namespace Splicewire\Composition\Angles;
 
 use Splicewire\Composition\Contracts\AngleContract;
 use Splicewire\Composition\Contracts\AngleContributor;
+use Splicewire\Composition\Steering\SteeringContribution;
+use Splicewire\Composition\Steering\SteeringResolver;
 
 /**
  * Merges an ordered set of angles into one {@see ComposedShape}. MANY angles, not one: the caller's
@@ -28,6 +30,17 @@ use Splicewire\Composition\Contracts\AngleContributor;
  *
  * The neutral base is OPTIONAL. Absent one, a compose that matches nothing returns an empty shape
  * flagged `neutralBase` rather than raising — the flag is what consumers branch on.
+ *
+ * Which angles survive is no longer decided here. It is {@see SteeringResolver}'s one axis-keyed rule,
+ * shared with music: contributions layer across axes and override within an axis, declaration order
+ * deciding. Text is the DEGENERATE case of that rule — it buckets by the angle's own identity, so two
+ * contributions never collide and the override never visibly fires. What used to be a bare
+ * `isset($contributors[$key])` skip was always that override; it simply had nothing to override.
+ *
+ * The composer keeps every behaviour it had, including the merge — union sections, grounding emphasis
+ * and components; intent and title guidance from the primary; fragments joined. That merge is text's
+ * payload knowledge and stays text's: the mechanism settles WHICH contributions survive, the medium
+ * settles HOW survivors merge.
  */
 class AngleComposer
 {
@@ -51,12 +64,12 @@ class AngleComposer
      */
     public function compose(array $angles): ComposedShape
     {
-        $contributors = [];
+        $declared = [];
 
         foreach ($angles as $angle) {
             $key = $angle instanceof AngleContract ? $angle->value() : $angle;
 
-            if (! is_string($key) || isset($contributors[$key])) {
+            if (! is_string($key)) {
                 continue;
             }
 
@@ -70,11 +83,13 @@ class AngleComposer
             }
 
             if ($contributor !== null) {
-                $contributors[$key] = $contributor;
+                $declared[] = $contributor;
             }
         }
 
-        if ($contributors === []) {
+        $resolved = (new SteeringResolver)->resolve($this->contributions($declared, $contributorOf));
+
+        if ($resolved->all() === []) {
             if ($this->neutralBase === null) {
                 // No neutral base configured: an honestly empty shape, flagged neutral. Consumers read
                 // the flag first (see ShapeBeatGuidance), so they short-circuit before the emptiness.
@@ -86,11 +101,16 @@ class AngleComposer
                     encouragedComponents: [],
                     promptFragment: '',
                     neutralBase: true,
+                    steering: $resolved->fingerprint(),
                 );
             }
 
-            $contributors[$this->neutralBase->angle()->value()] = $this->neutralBase;
+            $resolved = (new SteeringResolver)->resolve(
+                $this->contributions([$this->neutralBase], $contributorOf),
+            );
         }
+
+        $survivors = $resolved->all();
 
         // The shape is neutral when it resolved to the neutral fallback contributor ALONE — whether
         // because no requested angle matched the registry, or because the caller requested the fallback
@@ -100,16 +120,69 @@ class AngleComposer
         // Keyed off the INJECTED neutral base, so the flag holds whether it was reached through the
         // registry (a host that also lists it among contributors) or through the neutral path.
         $neutralBase = $this->neutralBase !== null
-            && array_keys($contributors) === [$this->neutralBase->angle()->value()];
+            && array_map(fn (SteeringContribution $c) => $c->axis, $survivors)
+                === [$this->neutralBase->angle()->value()];
 
-        return $this->merge(array_values($contributors), $neutralBase);
+        return $this->merge(
+            array_map(fn (SteeringContribution $c) => $contributorOf[spl_object_id($c)], $survivors),
+            $resolved->fingerprint(),
+            $neutralBase,
+        );
+    }
+
+    /**
+     * The requested contributors as generic contributions, plus a map back to the contributor that
+     * declared each one — by object identity, since the composer needs the contributor itself to merge
+     * and the mechanism only hands back contributions.
+     *
+     * Axis and key are both the angle's own identity. That is the whole configuration text needs: it is
+     * what makes collisions impossible here and overrides routine in music.
+     *
+     * @param  array<int, AngleContributor>  $contributors
+     * @param  array<int, AngleContributor>|null  $contributorOf  out-param, keyed by contribution id
+     * @return array<int, SteeringContribution>
+     */
+    private function contributions(array $contributors, ?array &$contributorOf): array
+    {
+        $contributorOf ??= [];
+        $contributions = [];
+
+        foreach ($contributors as $contributor) {
+            $contribution = new SteeringContribution(
+                axis: $contributor->angle()->value(),
+                key: $contributor->angle()->value(),
+                // Text's payload. The mechanism never opens it; it is here so the fingerprint's hash
+                // covers what the angle actually CONTRIBUTES — rewrite a section plan or a prompt
+                // fragment without renaming the angle and the fingerprint must move.
+                payload: [
+                    'intent' => $contributor->intent()?->value(),
+                    'sections' => $contributor->sections(),
+                    'groundingEmphasis' => array_map(
+                        fn ($category) => $category->value(),
+                        $contributor->groundingEmphasis(),
+                    ),
+                    'encouragedComponents' => array_map(
+                        fn ($component) => $component->value(),
+                        $contributor->encouragedComponents(),
+                    ),
+                    'promptFragment' => $contributor->promptFragment(),
+                    'titleGuidance' => $contributor->titleGuidance(),
+                ],
+            );
+
+            $contributions[] = $contribution;
+            $contributorOf[spl_object_id($contribution)] = $contributor;
+        }
+
+        return $contributions;
     }
 
     /**
      * @param  array<int, AngleContributor>  $contributors  primary first
+     * @param  array<string, mixed>  $steering  the resolved fingerprint, stamped for attribution
      * @param  bool  $neutralBase  true when $contributors is the neutral fallback alone
      */
-    private function merge(array $contributors, bool $neutralBase = false): ComposedShape
+    private function merge(array $contributors, array $steering, bool $neutralBase = false): ComposedShape
     {
         $orderedAngles = [];
         $sections = [];
@@ -138,6 +211,7 @@ class AngleComposer
             promptFragment: implode("\n\n", $fragments),
             titleGuidance: trim($contributors[0]->titleGuidance()),
             neutralBase: $neutralBase,
+            steering: $steering,
         );
     }
 

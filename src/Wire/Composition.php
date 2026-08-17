@@ -19,6 +19,14 @@ class Composition
      * @param  array<string, float>  $costByMeter  cost-of-goods broken down per Meter.
      * @param  string|null  $renderStatus  whole-composition render lifecycle: pending|completed|failed; null when never rendered.
      * @param  array<string, mixed>|null  $render  render detail on success/failure.
+     * @param  array<string, mixed>|null  $steering  how this composition was steered — `axis => {key, hash}`
+     *                                               as {@see \Splicewire\Composition\Steering\ResolvedSteering::fingerprint()}
+     *                                               renders it, carried up from the {@see \Splicewire\Composition\Angles\ComposedShape}.
+     *                                               Null when the server stamped none. Surfaced as a
+     *                                               property rather than left to $attributes because
+     *                                               attribution is the point of steering: without it,
+     *                                               "which change broke this piece" is a re-derivation
+     *                                               instead of a diff.
      */
     public function __construct(
         public string $id,
@@ -30,6 +38,7 @@ class Composition
         public array $costByMeter = [],
         public ?string $renderStatus = null,
         public ?array $render = null,
+        public ?array $steering = null,
     ) {}
 
     /**
@@ -52,6 +61,7 @@ class Composition
             renderStatus: isset($data['renderStatus']) ? (string) $data['renderStatus']
                 : (isset($data['render_status']) ? (string) $data['render_status'] : null),
             render: is_array($data['render'] ?? null) ? $data['render'] : null,
+            steering: is_array($data['steering'] ?? null) ? $data['steering'] : null,
         );
     }
 

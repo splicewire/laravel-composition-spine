@@ -26,6 +26,13 @@ class ComposedShape
      *                             is not empty — it carries sections and a prompt fragment — so
      *                             neutrality cannot be derived from emptiness; consumers (e.g. a
      *                             shape→beat-guidance stitcher) read this flag to emit no guidance.
+     * @param  array<string, mixed>  $steering  how this shape was steered, as
+     *                                          {@see \Splicewire\Composition\Steering\ResolvedSteering::fingerprint()}
+     *                                          renders it: `axis => {key, hash}`. Stamped onto the
+     *                                          Composition so a piece of prose can be attributed the way
+     *                                          a music take already is — the key says WHICH angle, the
+     *                                          hash says which VERSION of it, so an edited section plan
+     *                                          under an unchanged angle name is still a different shape.
      */
     public function __construct(
         public array $angles,
@@ -36,6 +43,7 @@ class ComposedShape
         public string $promptFragment,
         public string $titleGuidance = '',
         public bool $neutralBase = false,
+        public array $steering = [],
     ) {}
 
     /**
