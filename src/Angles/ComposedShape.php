@@ -3,10 +3,10 @@
 namespace Splicewire\Composition\Angles;
 
 use Splicewire\Composition\Contracts\AngleContract;
-use Splicewire\CompositionEngine\Contracts\AngleContributor;
+use Splicewire\Composition\Contracts\AngleContributor;
 use Splicewire\Composition\Contracts\ComponentIntentContract;
 use Splicewire\Composition\Contracts\ConversionIntentContract;
-use Splicewire\CompositionEngine\Contracts\GroundingCategoryContract;
+use Splicewire\Composition\Contracts\GroundingCategoryContract;
 
 /**
  * The merged result of composing an ordered set of {@see AngleContributor}s.

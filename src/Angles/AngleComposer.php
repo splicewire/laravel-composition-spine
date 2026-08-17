@@ -4,7 +4,7 @@ namespace Splicewire\Composition\Angles;
 
 use RuntimeException;
 use Splicewire\Composition\Contracts\AngleContract;
-use Splicewire\CompositionEngine\Contracts\AngleContributor;
+use Splicewire\Composition\Contracts\AngleContributor;
 
 /**
  * Merges an ordered set of angles into one {@see ComposedShape}. The caller's ordered picks are honoured

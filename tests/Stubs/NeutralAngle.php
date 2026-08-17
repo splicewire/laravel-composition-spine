@@ -3,7 +3,7 @@
 namespace Splicewire\Composition\Tests\Stubs;
 
 use Splicewire\Composition\Angles\AngleComposer;
-use Splicewire\CompositionEngine\Contracts\AngleContributor;
+use Splicewire\Composition\Contracts\AngleContributor;
 
 /**
  * The neutral fallback contributor. Like a host's General base it is NOT empty — it carries sections and

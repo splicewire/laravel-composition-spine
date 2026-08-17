@@ -2,7 +2,7 @@
 
 namespace Splicewire\Composition\Tests\Stubs;
 
-use Splicewire\CompositionEngine\Contracts\AngleContributor;
+use Splicewire\Composition\Contracts\AngleContributor;
 
 /**
  * A real (non-neutral) angle contributor: it carries an intent, sections, an encouraged component and a

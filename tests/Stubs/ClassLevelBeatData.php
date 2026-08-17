@@ -6,7 +6,7 @@ use Splicewire\Composition\Attributes\Beat;
 use Splicewire\Composition\Attributes\BeatKind;
 use Splicewire\Composition\Attributes\Cache;
 use Splicewire\Composition\Attributes\Generate;
-use Splicewire\Composition\Attributes\Ground;
+use Splicewire\Grounding\Attributes\Ground;
 use Splicewire\Composition\Attributes\MaxDepth;
 use Splicewire\Composition\Attributes\Pause;
 use Splicewire\Composition\Attributes\Polish;

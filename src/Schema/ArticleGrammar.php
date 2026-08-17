@@ -5,7 +5,7 @@ namespace Splicewire\Composition\Schema;
 use ReflectionClass;
 use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
 use Splicewire\Composition\GenerationAttributesStrategy;
-use Splicewire\CompositionEngine\Generation\TreeDrain;
+use Splicewire\Composition\Generation\TreeDrain;
 
 /**
  * Projects a NESTED, model-decided-structure generation schema from a fat root `Data`

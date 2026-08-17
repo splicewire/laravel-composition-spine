@@ -2,7 +2,7 @@
 
 use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
 use Spatie\LaravelData\Data;
-use Splicewire\Composition\Attributes\Grounding;
+use Splicewire\Grounding\Attributes\Grounding;
 use Splicewire\Composition\GenerationAttributesStrategy;
 use Splicewire\Composition\KeywordVocabulary;
 
