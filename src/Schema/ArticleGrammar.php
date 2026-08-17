@@ -5,7 +5,6 @@ namespace Splicewire\Composition\Schema;
 use ReflectionClass;
 use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
 use Splicewire\Composition\GenerationAttributesStrategy;
-use Splicewire\Composition\Generation\TreeDrain;
 
 /**
  * Projects a NESTED, model-decided-structure generation schema from a fat root `Data`
@@ -16,7 +15,7 @@ use Splicewire\Composition\Generation\TreeDrain;
  * sections), `ArticleGrammar` lets the MODEL decide the structure: the root graph carries
  * a single generated `outline` object beat whose own generated field (a nested array beat,
  * e.g. `sections`) fans once per entry the model emitted. The engine's recursive child-spec
- * drain ({@see TreeDrain::childSpecs}) reads the
+ * drain (`Splicewire\Composition\Generation\TreeDrain::childSpecs()`) reads the
  * parent node's generated field of the nested beat's name, so the count is whatever the
  * model returned for the outline — no host plan, no `DocumentPlan` (an inline schema
  * hydrates into a generic `SchemaNode`, never a `DocumentPlan`, so the sibling
