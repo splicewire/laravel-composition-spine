@@ -19,14 +19,17 @@ class CompositionDataServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/composition-spine-data.php', 'composition-spine-data');
+        $this->mergeConfigFrom(__DIR__.'/../config/splicewire/composition-data.php', 'splicewire.composition.data');
 
         // Angles are namespaced under the PRODUCT root, beside the engine's own
-        // `splicewire.composition.*`, rather than under a package-shaped key. The two packages merge
+        // `splicewire.composition.*`, rather than under a package-shaped key. The data key above now
+        // follows the same rule: it read the flat, package-shaped `composition-spine-data` root — the
+        // exact shape this comment argues against — in the same provider, for as long as this comment
+        // has been here. The two packages merge
         // disjoint sub-keys, so boot order does not matter. Declared here because this package owns
         // AngleComposer, ComposedShape and the AngleContributor port — the engine used to declare
         // config the spine read, which is the same inversion that had the port itself filed upward.
-        $this->mergeConfigFrom(__DIR__.'/../config/composition-angles.php', 'splicewire.composition.angles');
+        $this->mergeConfigFrom(__DIR__.'/../config/splicewire/composition-angles.php', 'splicewire.composition.angles');
 
         // The composer takes its vocabulary by injection and reads no config itself, so it stays a
         // plain object a test or a host can construct directly. Both keys are optional: a host with no
@@ -48,7 +51,7 @@ class CompositionDataServiceProvider extends ServiceProvider
         // The single keyword chokepoint, prefix driven by config. Bound as a singleton so every emit and
         // read site (across this package and the engine) resolves the same prefix.
         $this->app->singleton(KeywordVocabulary::class, fn () => new KeywordVocabulary(
-            (string) config('composition-spine-data.keyword_prefix', 'splice'),
+            (string) config('splicewire.composition.data.keyword_prefix', 'splice'),
         ));
     }
 
@@ -56,7 +59,7 @@ class CompositionDataServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/composition-spine-data.php' => config_path('composition-spine-data.php'),
+                __DIR__.'/../config/splicewire/composition-data.php' => config_path('splicewire/composition-data.php'),
             ], 'composition-spine-data-config');
         }
 
