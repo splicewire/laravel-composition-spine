@@ -25,6 +25,10 @@
         {
             "type": "git",
             "url": "https://github.com/schemastud/laravel-data-schemas.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-grounding-spine.git"
         }
     ],
     "extra": {
@@ -37,7 +41,9 @@
             "dev-main": "1.0.x-dev"
         },
         "merge-plugin": {
-            "include": ["composer.local.json"]
+            "include": [
+                "composer.local.json"
+            ]
         }
     },
     "config": {
