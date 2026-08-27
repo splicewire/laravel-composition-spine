@@ -1,6 +1,6 @@
 <?php
 
-use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
+use Schemastud\DataSchemas\Generators\Generator;
 use Spatie\LaravelData\Data;
 use Splicewire\Composition\GenerationAttributesStrategy;
 use Splicewire\Composition\KeywordVocabulary;
@@ -105,7 +105,7 @@ it('keeps the {fusion, sources} object form (no only key) when only fusion is de
 
 it('projects a property-level Grounding supplement onto the field schema', function () {
     $vocab = KeywordVocabulary::shared();
-    $schema = (new JsonSchemaGenerator)->generate(new ReflectionClass(SupplementGroundingFixture::class));
+    $schema = app(Generator::class)->generate(new ReflectionClass(SupplementGroundingFixture::class));
 
     expect($schema['properties']['sections'][$vocab->grounding()])
         ->toBe([['context_scope' => ['query' => 'background']]]);

@@ -4,7 +4,7 @@ namespace Splicewire\Composition;
 
 use ReflectionClass;
 use ReflectionProperty;
-use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
+use Schemastud\DataSchemas\Generators\Generator;
 use Schemastud\DataSchemas\Strategies\SchemaStrategy;
 use Schemastud\DataSchemas\Strategies\SchemaStrategyContext;
 use Schemastud\DataSchemas\Vocabulary\AttributeBinding;
@@ -318,7 +318,12 @@ class GenerationAttributesStrategy implements SchemaStrategy
      */
     private function embedItemSchema(string $type): array
     {
-        $generated = (new JsonSchemaGenerator)->generate(new ReflectionClass($type));
+        // Resolve the host's configured generator rather than newing a bare one: a bare
+        // JsonSchemaGenerator takes NO config, so `schema_metadata`, `schema_version` and
+        // `base_uri` are silently dropped and this embed item disagrees with every other leg.
+        // A throw is correct here — the chain names the class and the configured generators,
+        // whereas an embed item with no properties would silently corrupt the emitted grammar.
+        $generated = app(Generator::class)->generate(new ReflectionClass($type));
 
         $properties = is_array($generated['properties'] ?? null) ? $generated['properties'] : [];
 

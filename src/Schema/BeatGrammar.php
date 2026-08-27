@@ -3,7 +3,7 @@
 namespace Splicewire\Composition\Schema;
 
 use ReflectionClass;
-use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
+use Schemastud\DataSchemas\Generators\Generator;
 use Splicewire\Composition\Attributes\Beat;
 use Splicewire\Composition\Attributes\Generate;
 use Splicewire\Composition\Attributes\Prose;
@@ -25,7 +25,7 @@ use Splicewire\Grounding\Attributes\Ground;
  * The per-beat VARYING parts (which beats exist, their descriptions, the prose hint)
  * come from {@see self::beat()} — that is the data-dependent structure a static profile
  * can't express. The node field skeleton itself is emitted from the leaf via
- * {@see JsonSchemaGenerator}, so it stays in sync with the Data class the result is
+ * {@see Generator}, so it stays in sync with the Data class the result is
  * hydrated back into.
  *
  * `BeatGrammar` is the flat projector: it fans one leaf into a list of sibling beat
@@ -104,7 +104,9 @@ class BeatGrammar
         [$proseField, $proseRole] = $this->proseField($reflection);
 
         $leafProperties = $this->stripExamples(
-            (new JsonSchemaGenerator)->generate($reflection)['properties'] ?? []
+            // Host-configured generator (see ArticleGrammar::build()); a throw is correct for the
+            // same reason — a beat grammar with no leaf properties is not a degraded result.
+            app(Generator::class)->generate($reflection)['properties'] ?? []
         );
 
         $properties = [];

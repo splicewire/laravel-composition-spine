@@ -3,7 +3,7 @@
 namespace Splicewire\Composition\Schema;
 
 use ReflectionClass;
-use Schemastud\DataSchemas\Generators\JsonSchemaGenerator;
+use Schemastud\DataSchemas\Generators\Generator;
 use Splicewire\Composition\GenerationAttributesStrategy;
 
 /**
@@ -24,7 +24,7 @@ use Splicewire\Composition\GenerationAttributesStrategy;
  * Keyword emission is NOT re-implemented here: the registered
  * {@see GenerationAttributesStrategy} projects the
  * `#[Beat]/#[Generate]/#[Ground]/#[Prose]/#[Pause]` attributes on the `Data` graph to the
- * `x-*` keywords during {@see JsonSchemaGenerator::generate()}. `ArticleGrammar` only runs
+ * `x-*` keywords during {@see Generator::generate()}. `ArticleGrammar` only runs
  * the generator and hardens the result for strict structured output (exactly like
  * {@see BeatGrammar::build()}): it strips `examples` and stamps `additionalProperties:false`
  * + `required` = all property keys on every object node (root, nested beat nodes, and the
@@ -68,7 +68,13 @@ class ArticleGrammar
     {
         $reflection = new ReflectionClass($this->rootClass);
 
-        $schema = (new JsonSchemaGenerator)->generate($reflection);
+        // The host's configured generator, not a bare one — a bare JsonSchemaGenerator reads no
+        // config, so `schema_metadata`/`schema_version`/`base_uri` vanish and a versioned root
+        // class throws MissingSchemaBaseUri naming a key the host already set.
+        // No canGenerate() guard: this IS build(), and a grammar that cannot project its root
+        // class has no useful degraded result — the chain's throw names the class and the
+        // configured generators, which is strictly better than returning an empty schema.
+        $schema = app(Generator::class)->generate($reflection);
 
         // The generator hoists nested `Data` classes into `$defs` and points at them with
         // `#/$defs/Short` refs. The engine's GrammarWalk only resolves a self-`$ref` (`#`), so an
