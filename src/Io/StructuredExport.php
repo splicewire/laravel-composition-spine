@@ -51,7 +51,8 @@ class StructuredExport
             ];
         }
 
-        return new self(
+        // Transport adapters inherit this factory and must receive their own subtype.
+        return new static(
             schema: is_array($data['schema'] ?? null) ? $data['schema'] : null,
             nodes: $nodes,
             costUsd: isset($data['cost_usd']) ? (float) $data['cost_usd'] : null,
