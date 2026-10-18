@@ -23,50 +23,32 @@
     },
     "repositories": [
         {
-            "type": "path",
-            "url": "../../rushing/laravel-pipeline-registry",
-            "options": {
-                "symlink": true
-            }
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-pipeline-registry.git"
         },
         {
-            "type": "path",
-            "url": "../../rushing/laravel-popcorn",
-            "options": {
-                "symlink": true
-            }
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-popcorn.git"
         },
         {
-            "type": "path",
-            "url": "../../rushing/php-popcorn",
-            "options": {
-                "symlink": true
-            }
+            "type": "git",
+            "url": "https://github.com/stephenr85/php-graphine.git"
         },
         {
-            "type": "path",
-            "url": "../../schemastud/laravel-data-schemas",
-            "options": {
-                "symlink": true
-            }
+            "type": "git",
+            "url": "https://github.com/stephenr85/php-package-topology.git"
         },
         {
-            "type": "path",
-            "url": "../../schemastud/php-json-ns",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../../splicewire/laravel-grounding-spine",
-            "options": {
-                "symlink": true
-            }
+            "type": "git",
+            "url": "https://github.com/stephenr85/php-popcorn.git"
         },
         {
             "type": "git",
             "url": "https://github.com/schemastud/laravel-data-schemas.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/php-json-ns.git"
         },
         {
             "type": "git",
@@ -85,6 +67,25 @@
         "merge-plugin": {
             "include": [
                 "composer.local.json"
+            ],
+            "merge-dev": true
+        },
+        "package-topology": {
+            "because": "the spine keeps its noun VOs; it must never reach up into the engine process subtrees (B8-2 adoption, 2026-10-18 — Contracts is deliberately absent: both packages contribute to it under the shared root)",
+            "downOnly": [
+                "splicewire/laravel-composition-engine"
+            ],
+            "sourceNeverReferences": [
+                "Splicewire\\Composition\\Auditing\\",
+                "Splicewire\\Composition\\Correcting\\",
+                "Splicewire\\Composition\\Generation\\",
+                "Splicewire\\Composition\\Grounding\\",
+                "Splicewire\\Composition\\Kernel\\",
+                "Splicewire\\Composition\\Overlay\\",
+                "Splicewire\\Composition\\Persistence\\",
+                "Splicewire\\Composition\\Pipeline\\",
+                "Splicewire\\Composition\\Profiles\\",
+                "Splicewire\\Composition\\Rendering\\"
             ]
         }
     },
@@ -105,6 +106,7 @@
         "laravel/pint": "^1.0",
         "orchestra/testbench": "^10.0",
         "pestphp/pest": "^3.0",
+        "rushing/php-package-topology": "dev-main",
         "wikimedia/composer-merge-plugin": "^2.1"
     }
 }
