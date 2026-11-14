@@ -1,6 +1,6 @@
 # Node-action contracts live in the composition spine; callers bind the paid gate and recording
 
-Status: PROPOSED — owner acceptance or amendment required (node-actions-and-takes #02)
+Status: Accepted (owner, 2026-11-14)
 Date: 2026-11-14
 
 A node action changes an addressed truth payload and its standing; its projection is derived again.
