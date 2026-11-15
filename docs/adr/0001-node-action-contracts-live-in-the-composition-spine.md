@@ -3,6 +3,8 @@
 Status: Accepted (owner, 2026-11-14)
 Date: 2026-11-14
 
+A caller whose persistence is a client session may return the decision shape without a Recorder; kept then means offered, not recorded.
+
 A node action changes an addressed truth payload and its standing; its projection is derived again.
 The callers include composition cells, entry bodies and timeline selections, without making an entry
 or song a Composition Profile. Propose the shared contract in this existing spine, with inference
