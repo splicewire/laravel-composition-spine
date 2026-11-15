@@ -18,6 +18,7 @@ class ArtifactNodeTakeData extends NodeTakeData
         public ?string $resultUrl,
         public ?int $seconds,
         public ?string $completedAt,
+        #[\Schemastud\DataSchemas\Attributes\MapValues(['string', 'integer', 'number', 'boolean', 'null'])]
         public ?array $fingerprint,
         #[LiteralTypeScriptType("'artifact'")]
         public string $kind = 'artifact',

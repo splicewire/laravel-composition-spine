@@ -15,6 +15,7 @@ class RevisionNodeTakeData extends NodeTakeData
         public ?string $recordedAt,
         public NodeTakeBeforeData $before,
         public ?NodeTakeProducerData $producer,
+        #[\Schemastud\DataSchemas\Attributes\MapValues(['string', 'integer', 'number', 'boolean', 'null'])]
         public ?array $fingerprint,
         #[LiteralTypeScriptType("'revision'")]
         public string $kind = 'revision',

@@ -23,3 +23,14 @@ it('round trips distinct revision and music artifact takes for one addressed nod
         ->and($takes->data[1]->fingerprint)->toBeNull()
         ->and($takes->toArray())->toEqual($wire);
 });
+
+it('emits fingerprint values as the declared flat scalar union rather than null-only values', function () {
+    $schema = app(Schemastud\DataSchemas\Generators\JsonSchemaGenerator::class)
+        ->generate(new ReflectionClass(NodeTakeCollectionData::class));
+    foreach (['RevisionNodeTakeData', 'ArtifactNodeTakeData'] as $kind) {
+        $fingerprint = $schema['$defs'][$kind]['properties']['fingerprint'];
+        expect($fingerprint['type'])->toBe(['object', 'null'])
+            ->and($fingerprint['additionalProperties']['type'])->toBe(['boolean', 'integer', 'null', 'number', 'string']);
+    }
+    expect($schema['$defs']['NodeTakeBeforeData']['properties']['truth']['type'])->toBe('object');
+});
