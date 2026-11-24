@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a05f4768cda8b313d018e1df0cf12da4",
+    "content-hash": "16d1586dca86b4a9f3fd5a91655c9e08",
     "packages": [
         {
             "name": "brick/math",
@@ -3620,6 +3620,82 @@
             "time": "2026-11-14T23:23:20+00:00"
         },
         {
+            "name": "rushing/laravel-pipeline-registry",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stephenr85/laravel-pipeline-registry.git",
+                "reference": "c11ca1f164f8472b826968e63a4d49bf32e1f21e"
+            },
+            "require": {
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/pipeline": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.3",
+                "rushing/laravel-popcorn": "dev-main",
+                "rushing/php-popcorn": "dev-main",
+                "symfony/finder": "^6.0|^7.0|^8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^2.0|^3.0",
+                "wikimedia/composer-merge-plugin": "^2.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.0.x-dev"
+                },
+                "laravel": {
+                    "providers": [
+                        "Rushing\\PipelineRegistry\\PipelineRegistryServiceProvider"
+                    ]
+                },
+                "merge-plugin": {
+                    "include": [
+                        "composer.local.json"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Rushing\\PipelineRegistry\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Rushing\\PipelineRegistry\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "@php vendor/bin/pest"
+                ],
+                "pint": [
+                    "@php -d memory_limit=512M vendor/bin/pint"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stephen Rushing",
+                    "email": "stephen@rushing.dev"
+                }
+            ],
+            "description": "A thin, declarative registry over Illuminate\\Pipeline: named, runtime-mutable pipelines assembled from [[StageClass::class, [...options]]] tuples, discovered per-package from config/pipelines/*.php (category = filename). Tier-A mechanism only — it owns the registry and the executor wiring, never the stages' domain logic.",
+            "keywords": [
+                "laravel",
+                "pipeline",
+                "registry",
+                "stages"
+            ],
+            "time": "2026-11-21T01:16:31+00:00"
+        },
+        {
             "name": "rushing/laravel-popcorn",
             "version": "dev-main",
             "source": {
@@ -3759,26 +3835,38 @@
         },
         {
             "name": "schemastud/laravel-data-schemas",
-            "version": "v1.1.1",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/schemastud/laravel-data-schemas.git",
-                "reference": "04962eabbf6ff90435ce5ae4fd84561d0471fc79"
+                "reference": "7f861bb381e99e14d5716b6ec00371b13c0b453d"
             },
             "require": {
+                "galbar/jsonpath": "^3.0",
                 "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/http": "^11.0|^12.0|^13.0",
+                "illuminate/routing": "^11.0|^12.0|^13.0",
                 "illuminate/support": "^11.0|^12.0|^13.0",
                 "opis/json-schema": "^2.3",
-                "php": "^8.2",
+                "php": "^8.3",
+                "rushing/laravel-pipeline-registry": "dev-main",
                 "rushing/laravel-popcorn": "dev-main",
+                "rushing/php-popcorn": "dev-main",
+                "schemastud/php-json-ns": "*",
                 "spatie/laravel-data": "^4.0|^5.0",
                 "symfony/finder": "^6.0|^7.0|^8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
                 "orchestra/testbench": "^9.0|^10.0|^11.0",
-                "phpunit/phpunit": "^11.0|^12.0"
+                "phpunit/phpunit": "^11.0|^12.0",
+                "spatie/typescript-transformer": "^3.3",
+                "wikimedia/composer-merge-plugin": "^2.1"
             },
+            "suggest": {
+                "spatie/typescript-transformer": "^3.3 required when registering the optional MorphUnionTransformer."
+            },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -3788,11 +3876,17 @@
                 },
                 "branch-alias": {
                     "dev-main": "1.0.x-dev"
+                },
+                "merge-plugin": {
+                    "include": [
+                        "composer.local.json"
+                    ]
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Schemastud\\DataSchemas\\": "src/"
+                    "Schemastud\\DataSchemas\\": "src/",
+                    "Rushing\\LaravelDataSchemasScribe\\Attributes\\": "src/Http/Attributes/"
                 }
             },
             "autoload-dev": {
@@ -3801,8 +3895,14 @@
                 }
             },
             "scripts": {
+                "test": [
+                    "@php vendor/bin/phpunit"
+                ],
                 "pint": [
                     "@php -d memory_limit=512M vendor/bin/pint"
+                ],
+                "docs:examples": [
+                    "@php tests/regenerate-data-examples.php"
                 ]
             },
             "license": [
@@ -3823,7 +3923,78 @@
                 "spatie",
                 "validation"
             ],
-            "time": "2026-07-12T18:41:06+00:00"
+            "time": "2026-11-24T02:38:17+00:00"
+        },
+        {
+            "name": "schemastud/php-json-ns",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/schemastud/php-json-ns.git",
+                "reference": "1e6579cae2a02bb6cb33913991d4adfb24a1e41d"
+            },
+            "require": {
+                "opis/json-schema": "^2.3",
+                "php": "^8.3",
+                "rushing/php-popcorn": "*"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "pestphp/pest": "^4.0",
+                "rushing/php-package-topology": "dev-main",
+                "wikimedia/composer-merge-plugin": "^2.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "package-topology": {
+                    "mustNotRequire": [
+                        "illuminate/*"
+                    ]
+                },
+                "merge-plugin": {
+                    "include": [
+                        "composer.local.json"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Schemastud\\JsonNs\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Schemastud\\JsonNs\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "pint": [
+                    "@php -d memory_limit=512M vendor/bin/pint"
+                ],
+                "test": [
+                    "@php vendor/bin/pest"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stephen Rushing",
+                    "email": "stephenr85@gmail.com"
+                }
+            ],
+            "description": "The framework-free @namespace grammar: a CURIE-shaped, RDF-stripped prefix→URI map (SchemaId-shaped URIs) with @namespaced subtree overlays, late scope-local URI-is-identity resolution, and a namespace-aware validation-scoping model.",
+            "keywords": [
+                "curie",
+                "json",
+                "json-ld",
+                "namespace",
+                "schema",
+                "vocabulary"
+            ],
+            "time": "2026-11-21T03:25:46+00:00"
         },
         {
             "name": "spatie/laravel-data",
@@ -10776,12 +10947,13 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "rushing/php-package-topology": 20
+        "rushing/php-package-topology": 20,
+        "schemastud/laravel-data-schemas": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2"
+        "php": "^8.3"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"
